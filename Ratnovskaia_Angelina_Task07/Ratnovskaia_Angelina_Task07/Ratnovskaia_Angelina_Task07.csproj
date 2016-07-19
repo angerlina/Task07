@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="Catalog.cs" />
     <Compile Include="File.cs" />
+    <Compile Include="FileSystem.cs" />
+    <Compile Include="FileSystemItem.cs" />
     <Compile Include="IVirtualFileSystem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
