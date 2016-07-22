@@ -8,11 +8,14 @@ namespace Ratnovskaia_Angelina_Task07
 {
     interface IVirtualFileSystem
     {
-         Catalog CreateCatalog(string name, Catalog folder);
-         File CreateFile(string name, Catalog folder);
-         void Remove(FileSystemItem item);
-         FileSystemItem Copy(FileSystemItem item, Catalog receiver);
-         void Move(FileSystemItem item, Catalog receiver);
+         Catalog CreateCatalog(string name, string path);
+         File CreateFile(string name, string path);
+         void Remove(string path);
+         FileSystemItem Copy(string itemPath, string receiverPath);
+         void Move(string itemPath, string receiverPath);
+         void Rename(string newName, string path);
+         List<FileSystemItem> GetAllItemsByPath(string path);
+
 
 
 

@@ -26,38 +26,5 @@ namespace Ratnovskaia_Angelina_Task07
         }
 
 
-        //public string GetParent()
-        //{
-        //    return Parent == null ? "" : Parent.Name;
-        //}
-
-
-        //public string GetPath()
-        //{
-        //     List<string> path = new List<string>();
-        //    File c = this;
-        //    while (c != null)
-        //    {
-        //        path.Add(c.Name);
-        //       c = c.Parent;
-        //    }
-
-        //    path.Reverse();
-        //    return string.Join("/", path);
-        //}
-
-
-        //public string GetCatalogs()
-        //{
-        //    string c = "";
-        //    foreach (File catalog in List )
-        //    {
-        //        c += catalog.Name + " ";
-        //    }
-
-        //    return c != "" ? c : "empty";
-        //}
-
-
     }
 }
