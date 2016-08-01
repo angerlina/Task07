@@ -1,48 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ratnovskaia_Angelina_Task07 
 {
    public class FileSystem : IVirtualFileSystem
     {
 
-        internal static Catalog root = new Catalog("root");
+        internal static Catalog Root = new Catalog("root");
 
-        private bool IsValidName (string name, List<FileSystemItem> list)
+        private static bool IsValidName (string name, List<FileSystemItem> list)
         {
-            return !list.Any(element => element.Name == name);
+            return list.All(element => element.Name != name);
         }
 
-
-        public File CreateFile(string name, string path)
+        public bool CreateFile(string name, string path)
         {
-            Catalog folder = (Catalog)GetItemByPath(path);
-            if (IsValidName(name, folder.List))
-            {
-                var newFile = new File(name) { Parent = folder };
-                folder.List.Add(newFile);
-                return newFile;
-            }
-            else throw new Exception();
+            var folder = (Catalog)GetItemByPath(path);
+            if (!IsValidName(name, folder.List)) return false;
+            var newFile = new File(name) { Parent = folder };
+            folder.List.Add(newFile);
+            return true;
         }
 
-        internal FileSystemItem GetItemByPath(string path)
+        private static FileSystemItem GetItemByPath(string path)
         {
             if (path == "root")
             {
-                return root;
+                return Root;
             }
             path = path.Replace("root/", "");
             var arr = path.Split('/').ToList();
-            Catalog current = root;
+            var current = Root;
             do
             { 
-                FileSystemItem folder = current.List.Find(element => element.Name == arr[0]);
+                var folder = current.List.Find(element => element.Name == arr[0]);
                 if(folder.GetType() == typeof(File) && folder.GetType() != typeof(Catalog)) return folder;
-                else
                 current = (Catalog)folder;
                 arr.RemoveAt(0);
             }
@@ -52,29 +44,28 @@ namespace Ratnovskaia_Angelina_Task07
         }
 
         
-        public Catalog CreateCatalog(string name, string path)
+        public bool CreateCatalog(string name, string path)
         {
-            Catalog folder = (Catalog)GetItemByPath(path);
-            if (IsValidName(name, folder.List))
-            {
-                var newCatalog = new Catalog(name) { Parent = folder };
-                folder.List.Add(newCatalog);
-                return newCatalog;
-            }
-            else throw new Exception();           
+            var folder = (Catalog)GetItemByPath(path);
+            if (!IsValidName(name, folder.List)) return false;
+            var newCatalog = new Catalog(name) { Parent = folder };
+            folder.List.Add(newCatalog);
+            return true;
         }
 
-        public void Remove(string path)
+        public bool Remove(string path)
         {
-            FileSystemItem item = GetItemByPath(path);
+            var item = GetItemByPath(path);
+            if (!item.Parent.List.Contains(item)) return false;
             item.Parent.List.Remove(item);
             item.Parent = null;
+            return true;
         }
 
-        public FileSystemItem Copy(string itemPath, string receiverPath)
+        public bool Copy(string itemPath, string receiverPath)
         {
-            Catalog receiver = (Catalog)GetItemByPath(receiverPath);
-            FileSystemItem file = GetItemByPath(itemPath);
+            var receiver = (Catalog)GetItemByPath(receiverPath);
+            var file = GetItemByPath(itemPath);
             var fileCopy = file.DeepCopy();
             if (receiver == file.Parent)
             {
@@ -84,26 +75,23 @@ namespace Ratnovskaia_Angelina_Task07
             {
                 receiver.List.Add(fileCopy);
                 fileCopy.Parent = receiver;
-                return fileCopy;
+                return true;
             }
 
-            else throw new Exception();
+            return false;
         }
 
-        public void Move(string itemPath, string receiverPath)
-        {           
-            Copy(itemPath, receiverPath);
-            Remove(itemPath);
-        }
-
-       public void Rename(string newName, string path)
+        public bool Move(string itemPath, string receiverPath)
         {
-            FileSystemItem item = GetItemByPath(path);
-            if (IsValidName(newName, item.Parent.List))
-            {
-                item.Name = newName;
-            }
-            else throw new Exception();           
+            return Copy(itemPath, receiverPath) && Remove(itemPath);
+        }
+
+       public bool Rename(string newName, string path)
+        {
+            var item = GetItemByPath(path);
+           if (!IsValidName(newName, item.Parent.List)) return false;
+           item.Name = newName;
+           return true;
         }
         public List<FileSystemItem> GetAllItemsByPath(string path)
         {

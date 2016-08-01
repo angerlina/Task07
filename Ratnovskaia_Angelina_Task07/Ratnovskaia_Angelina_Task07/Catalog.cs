@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Ratnovskaia_Angelina_Task07
 {
@@ -11,16 +6,14 @@ namespace Ratnovskaia_Angelina_Task07
     {
        public Catalog(string name) : base(name) { List = new List<FileSystemItem>(); }
 
-
         public List<FileSystemItem> List { get; set; }
-
 
         public override FileSystemItem DeepCopy()
         {
-            Catalog other = (Catalog)this.MemberwiseClone();
-            other.Name = String.Copy(Name);
+            var other = (Catalog)MemberwiseClone();
+            other.Name = string.Copy(Name);
             
-            other.List = new List<FileSystemItem>(this.List);
+            other.List = new List<FileSystemItem>(List);
 
             return other;
         }
