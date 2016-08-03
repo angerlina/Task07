@@ -10,120 +10,159 @@ using System.Net.Sockets;
 namespace Ratnovskaia_Angelina_Task07
 {
     
-    class Program
+   public class Program
     {
         static int port = 8005;
-        
-        
+        public static string message = null;
+        public static string data = null;
 
         internal static void IsSuccess(bool action)
         {
             if (!action)
             {
-                Console.WriteLine("Не должно быть дубликатов имен в пределах одной папки!");
+                Program.message = "Не должно быть дубликатов в пределах одной папки!";
             }
         }
 
 
-        static void Main()
+       public static void StartListening()
         {
            
             var driver = new FileSystem();
 
+            byte[] bytes = new Byte[1024];
+
             IPEndPoint ipPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
-            Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listenSocket.Bind(ipPoint);
-            listenSocket.Listen(10);
-            while (true)
+            using (Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
-                Socket handler = listenSocket.Accept();
-                // получаем сообщение
-                StringBuilder builder = new StringBuilder();
-                int bytes = 0; // количество полученных байтов
-                byte[] data = new byte[256]; // буфер для получаемых данных
 
-                do
+                try
                 {
-                    bytes = handler.Receive(data);
-                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                }
-                while (handler.Available > 0);
-             
+                    listenSocket.Bind(ipPoint);
+                    listenSocket.Listen(10);
 
-                    try
+                    while (true)
                     {
-                        var s = builder.ToString();
-                        s = s.ToLower();
-                        var param = s.Split(' ');
+                        Console.WriteLine("Ожидание соединения...");
 
-
-                        switch (param[0])
+                        using (Socket handler = listenSocket.Accept())
                         {
-                            case "md":
-                                IsSuccess(driver.CreateCatalog(param[1], (param[2])));
-                                break;
 
-                            case "mf":
-                                IsSuccess(driver.CreateFile(param[1], param[2]));
-                                break;
+                            data = null;
 
-                            case "remove":
-                                IsSuccess(driver.Remove(param[1]));
-                                break;
+                            #region Получение команд
+                            do
+                            {
+                                bytes = new byte[1024];
+                                int bytesRec = handler.Receive(bytes);
+                                data = Encoding.Unicode.GetString(bytes, 0, bytesRec);
+                                Console.WriteLine("Текст получен: {0}", data);
 
-                            case "copy":
-                                IsSuccess(driver.Copy(param[1], param[2]));
-                                break;
-
-                            case "move":
-                                IsSuccess(driver.Move(param[1], param[2]));
-                                break;
-
-                            case "rename":
-                                IsSuccess(driver.Rename(param[1], param[2]));
-                                break;
-
-                            case "show":
-
-                                var itemList = driver.GetAllItemsByPath(param[1]);
-                                var list = itemList.Select(element => element.Name).ToList();
-
-                                foreach (var element in list)
+                                try
                                 {
-                                    Console.WriteLine(element);
+
+                                    var s = data.ToLower();
+                                    var param = s.Split(' ');
+                                    message = "все ок";
+
+                                    #region switch
+
+                                    switch (param[0])
+                                    {
+                                        case "md":
+                                            IsSuccess(driver.CreateCatalog(param[1], (param[2])));
+                                            break;
+
+                                        case "mf":
+                                            IsSuccess(driver.CreateFile(param[1], param[2]));
+                                            break;
+
+                                        case "remove":
+                                            IsSuccess(driver.Remove(param[1]));
+                                            break;
+
+                                        case "copy":
+                                            IsSuccess(driver.Copy(param[1], param[2]));
+                                            break;
+
+                                        case "move":
+                                            IsSuccess(driver.Move(param[1], param[2]));
+                                            break;
+
+                                        case "rename":
+                                            IsSuccess(driver.Rename(param[1], param[2]));
+                                            break;
+
+                                        case "show":
+
+                                            var itemList = driver.GetAllItemsByPath(param[1]);
+                                            var list = itemList.Select(element => element.Name).ToList();
+
+                                            foreach (var element in list)
+                                            {
+                                                Console.WriteLine(element);
+                                            }
+                                            break;
+
+                                        case "exit":
+                                            break;
+
+                                        default:
+                                            message = "Некорректная команда!";
+                                            break;
+                                    }
+
+                                    #endregion
+
+
                                 }
-                                break;
+                                catch (NullReferenceException)
+                                {
 
-                            default:
-                                Console.WriteLine(("Некорректная команда!"));
-                                break;
+                                    message = "Неверно задан путь";
+
+
+                                }
+
+                                catch (IndexOutOfRangeException)
+                                {
+                                    message = "Неверно заданы параметры";
+
+                                }
+
+
+                                // отправляем ответ
+                                byte[] msg = Encoding.Unicode.GetBytes(message);
+                                handler.Send(msg);
+
+                            }
+                            while (true);
+
+                            #endregion Получение комманд
                         }
+
+
+                      
+
+
+
+                        //handler.Shutdown(SocketShutdown.Both);
+
+                        //handler.Close();
+
                     }
-                    catch (NullReferenceException)
-                    {
-
-                        Console.WriteLine("Неверно задан путь");
-                    }
-
-                    catch (IndexOutOfRangeException)
-                    {
-                        Console.WriteLine("Неверно заданы параметры");
-                    }
-                
-
-
-                Console.ReadLine();
-
-                // отправляем ответ
-                string message = "ваше сообщение доставлено";
-                data = Encoding.Unicode.GetBytes(message);
-                handler.Send(data);
-                // закрываем сокет
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
+        }
 
-
+        public static int Main(String[] args)
+        {
+            StartListening();
+            return 0;
         }
     }
 }
